@@ -1,4 +1,12 @@
-# Official Espressif options
+##############################################################
+#  Moovma Elyssa - ESP32-S3FN8 (8 MB embedded flash, no PSRAM)
+#
+#  RULE: in every menu, the FIRST option listed is the default.
+#  RULE: menu option keys (e.g. "8M", "cdc") are a contract:
+#        renaming/removing one breaks users who had it selected.
+##############################################################
+
+# Menus used by Elyssa (only these; everything else removed)
 menu.UploadSpeed=Upload Speed
 menu.USBMode=USB Mode
 menu.CDCOnBoot=USB CDC On Boot
@@ -6,157 +14,91 @@ menu.MSCOnBoot=USB Firmware MSC On Boot
 menu.DFUOnBoot=USB DFU On Boot
 menu.UploadMode=Upload Mode
 menu.CPUFreq=CPU Frequency
-menu.FlashFreq=Flash Frequency
 menu.FlashMode=Flash Mode
 menu.FlashSize=Flash Size
 menu.PartitionScheme=Partition Scheme
 menu.DebugLevel=Core Debug Level
-menu.PSRAM=PSRAM
 menu.LoopCore=Arduino Runs On
 menu.EventsCore=Events Run On
-menu.MemoryType=Memory Type
 menu.EraseFlash=Erase All Flash Before Sketch Upload
 menu.JTAGAdapter=JTAG Adapter
-menu.ZigbeeMode=Zigbee Mode
-menu.PinNumbers=Pin Numbering
-menu.ChipVariant=Chip Variant
-
-# Custom options
-menu.Revision=Board Revision
-menu.LORAWAN_REGION=LoRaWan Region
-menu.LoRaWanDebugLevel=LoRaWan Debug Level
-menu.LORAWAN_DEVEUI=LoRaWan DevEUI
-menu.LORAWAN_PREAMBLE_LENGTH=LoRaWan Preamble Length
-menu.LORA_FEM_TYPE=LoRa FEM Type
-menu.LORA_RX_LNA=LoRa External FEM Receive Gain
-menu.SLOW_CLK_TPYE=Slow Clk Type(only for LoRaWAN)
-menu.einksize=E-Ink Display Size
-menu.NetworkLogLevel=Network Log Level
-menu.DisplayModel=Display Model
-
-##############################################################
-### DO NOT PUT BOARDS ABOVE THE OFFICIAL ESPRESSIF BOARDS! ###
-##############################################################
-
-
+menu.PSRAM=PSRAM
 
 ##############################################################
 
 elyssa.name=Elyssa
 
+# --- USB identity for automatic board detection -------------
+# TEMPORARY PID for local tests only. Replace with the PID
+# assigned by Espressif (github.com/espressif/usb-pids).
+# MUST be identical to USB_PID in variants/elyssa/pins_arduino.h
+elyssa.upload_port.0.vid=0x303A
+elyssa.upload_port.0.pid=0x81FF
+
+# --- Tools --------------------------------------------------
 elyssa.bootloader.tool=esptool_py
 elyssa.bootloader.tool.default=esptool_py
-
 elyssa.upload.tool=esptool_py
 elyssa.upload.tool.default=esptool_py
 elyssa.upload.tool.network=esp_ota
 
-elyssa.upload.maximum_size=1310720
+# --- Upload defaults (TinyUSB: reset via 1200 bps touch) ----
+elyssa.upload.maximum_size=3342336
 elyssa.upload.maximum_data_size=327680
 elyssa.upload.flags=
 elyssa.upload.extra_flags=
-elyssa.upload.use_1200bps_touch=false
-elyssa.upload.wait_for_upload_port=false
+elyssa.upload.use_1200bps_touch=true
+elyssa.upload.wait_for_upload_port=true
 
 elyssa.serial.disableDTR=false
 elyssa.serial.disableRTS=false
 
+# --- Chip and board -----------------------------------------
 elyssa.build.tarch=xtensa
 elyssa.build.bootloader_addr=0x0
 elyssa.build.target=esp32s3
 elyssa.build.mcu=esp32s3
 elyssa.build.core=esp32
 elyssa.build.variant=elyssa
-elyssa.build.board=ESP32S3_DEV
+elyssa.build.board=ELYSSA
 
-elyssa.build.usb_mode=1
-elyssa.build.cdc_on_boot=0
+# --- USB defaults: TinyUSB + Serial over USB ----------------
+elyssa.build.usb_mode=0
+elyssa.build.cdc_on_boot=1
 elyssa.build.msc_on_boot=0
 elyssa.build.dfu_on_boot=0
+
+# --- CPU / flash: fixed by the hardware (FN8 = 8 MB quad) ---
 elyssa.build.f_cpu=240000000L
-elyssa.build.flash_size=4MB
+elyssa.build.flash_size=8MB
 elyssa.build.flash_freq=80m
 elyssa.build.flash_mode=dio
 elyssa.build.boot=qio
 elyssa.build.boot_freq=80m
-elyssa.build.partitions=default
+elyssa.build.partitions=default_8MB
 elyssa.build.defines=
 elyssa.build.loop_core=
 elyssa.build.event_core=
+
+# No PSRAM on the FN8 (see the single-option PSRAM menu below)
 elyssa.build.psram_type=qspi
 elyssa.build.memory_type={build.boot}_{build.psram_type}
 
-elyssa.menu.JTAGAdapter.default=Disabled
-elyssa.menu.JTAGAdapter.default.build.copy_jtag_files=0
-elyssa.menu.JTAGAdapter.builtin=Integrated USB JTAG
-elyssa.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
-elyssa.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
-elyssa.menu.JTAGAdapter.external=FTDI Adapter
-elyssa.menu.JTAGAdapter.external.build.openocdscript=esp32s3-ftdi.cfg
-elyssa.menu.JTAGAdapter.external.build.copy_jtag_files=1
-elyssa.menu.JTAGAdapter.bridge=ESP USB Bridge
-elyssa.menu.JTAGAdapter.bridge.build.openocdscript=esp32s3-bridge.cfg
-elyssa.menu.JTAGAdapter.bridge.build.copy_jtag_files=1
+##############################################################
+#  MENUS (first option = default)
+##############################################################
 
-elyssa.menu.PSRAM.disabled=Disabled
-elyssa.menu.PSRAM.disabled.build.defines=
-elyssa.menu.PSRAM.disabled.build.psram_type=qspi
-elyssa.menu.PSRAM.enabled=QSPI PSRAM
-elyssa.menu.PSRAM.enabled.build.defines=-DBOARD_HAS_PSRAM
-elyssa.menu.PSRAM.enabled.build.psram_type=qspi
-elyssa.menu.PSRAM.opi=OPI PSRAM
-elyssa.menu.PSRAM.opi.build.defines=-DBOARD_HAS_PSRAM
-elyssa.menu.PSRAM.opi.build.psram_type=opi
-
-elyssa.menu.FlashMode.qio=QIO 80MHz
-elyssa.menu.FlashMode.qio.build.flash_mode=dio
-elyssa.menu.FlashMode.qio.build.boot=qio
-elyssa.menu.FlashMode.qio.build.boot_freq=80m
-elyssa.menu.FlashMode.qio.build.flash_freq=80m
-elyssa.menu.FlashMode.qio120=QIO 120MHz
-elyssa.menu.FlashMode.qio120.build.flash_mode=dio
-elyssa.menu.FlashMode.qio120.build.boot=qio
-elyssa.menu.FlashMode.qio120.build.boot_freq=120m
-elyssa.menu.FlashMode.qio120.build.flash_freq=80m
-elyssa.menu.FlashMode.dio=DIO 80MHz
-elyssa.menu.FlashMode.dio.build.flash_mode=dio
-elyssa.menu.FlashMode.dio.build.boot=dio
-elyssa.menu.FlashMode.dio.build.boot_freq=80m
-elyssa.menu.FlashMode.dio.build.flash_freq=80m
-elyssa.menu.FlashMode.opi=OPI 80MHz
-elyssa.menu.FlashMode.opi.build.flash_mode=dout
-elyssa.menu.FlashMode.opi.build.boot=opi
-elyssa.menu.FlashMode.opi.build.boot_freq=80m
-elyssa.menu.FlashMode.opi.build.flash_freq=80m
-
-elyssa.menu.FlashSize.4M=4MB (32Mb)
-elyssa.menu.FlashSize.4M.build.flash_size=4MB
-elyssa.menu.FlashSize.8M=8MB (64Mb)
-elyssa.menu.FlashSize.8M.build.flash_size=8MB
-elyssa.menu.FlashSize.16M=16MB (128Mb)
-elyssa.menu.FlashSize.16M.build.flash_size=16MB
-elyssa.menu.FlashSize.32M=32MB (256Mb)
-elyssa.menu.FlashSize.32M.build.flash_size=32MB
-
-elyssa.menu.LoopCore.1=Core 1
-elyssa.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
-elyssa.menu.LoopCore.0=Core 0
-elyssa.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
-
-elyssa.menu.EventsCore.1=Core 1
-elyssa.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
-elyssa.menu.EventsCore.0=Core 0
-elyssa.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
-
-elyssa.menu.USBMode.hwcdc=Hardware CDC and JTAG
-elyssa.menu.USBMode.hwcdc.build.usb_mode=1
+# USB mode: TinyUSB gives the board its "Elyssa" identity.
+# Hardware CDC kept for JTAG debugging.
 elyssa.menu.USBMode.default=USB-OTG (TinyUSB)
 elyssa.menu.USBMode.default.build.usb_mode=0
+elyssa.menu.USBMode.hwcdc=Hardware CDC and JTAG
+elyssa.menu.USBMode.hwcdc.build.usb_mode=1
 
-elyssa.menu.CDCOnBoot.default=Disabled
-elyssa.menu.CDCOnBoot.default.build.cdc_on_boot=0
 elyssa.menu.CDCOnBoot.cdc=Enabled
 elyssa.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
+elyssa.menu.CDCOnBoot.default=Disabled
+elyssa.menu.CDCOnBoot.default.build.cdc_on_boot=0
 
 elyssa.menu.MSCOnBoot.default=Disabled
 elyssa.menu.MSCOnBoot.default.build.msc_on_boot=0
@@ -168,25 +110,56 @@ elyssa.menu.DFUOnBoot.default.build.dfu_on_boot=0
 elyssa.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
 elyssa.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-elyssa.menu.UploadMode.default=UART0 / Hardware CDC
-elyssa.menu.UploadMode.default.upload.use_1200bps_touch=false
-elyssa.menu.UploadMode.default.upload.wait_for_upload_port=false
 elyssa.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
 elyssa.menu.UploadMode.cdc.upload.use_1200bps_touch=true
 elyssa.menu.UploadMode.cdc.upload.wait_for_upload_port=true
+elyssa.menu.UploadMode.default=UART0 / Hardware CDC
+elyssa.menu.UploadMode.default.upload.use_1200bps_touch=false
+elyssa.menu.UploadMode.default.upload.wait_for_upload_port=false
 
-elyssa.menu.PartitionScheme.default=Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)
-elyssa.menu.PartitionScheme.default.build.partitions=default
-elyssa.menu.PartitionScheme.defaultffat=Default 4MB with ffat (1.2MB APP/1.5MB FATFS)
-elyssa.menu.PartitionScheme.defaultffat.build.partitions=default_ffat
+# Only 8 MB schemes (the chip has exactly 8 MB)
 elyssa.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
 elyssa.menu.PartitionScheme.default_8MB.build.partitions=default_8MB
 elyssa.menu.PartitionScheme.default_8MB.upload.maximum_size=3342336
+elyssa.menu.PartitionScheme.default_ffat_8MB=8M with ffat (3MB APP/1.5MB FATFS)
+elyssa.menu.PartitionScheme.default_ffat_8MB.build.partitions=default_ffat_8MB
+elyssa.menu.PartitionScheme.default_ffat_8MB.upload.maximum_size=3342336
+elyssa.menu.PartitionScheme.large_spiffs_8MB=8M large SPIFFS (1.25MB APP/5.3MB SPIFFS)
+elyssa.menu.PartitionScheme.large_spiffs_8MB.build.partitions=large_spiffs_8MB
+elyssa.menu.PartitionScheme.large_spiffs_8MB.upload.maximum_size=1310720
+elyssa.menu.PartitionScheme.max_app_8MB=8M max app, no OTA (7.9MB APP)
+elyssa.menu.PartitionScheme.max_app_8MB.build.partitions=max_app_8MB
+elyssa.menu.PartitionScheme.max_app_8MB.upload.maximum_size=8257536
+
+# No PSRAM on the FN8. Menu kept with ONE option so that IDEs which
+# remember "PSRAM=disabled" from the old package don't fail with
+# "invalid option 'PSRAM'" (backward compatibility).
+elyssa.menu.PSRAM.disabled=Disabled (no PSRAM on ESP32-S3FN8)
+elyssa.menu.PSRAM.disabled.build.defines=
+elyssa.menu.PSRAM.disabled.build.psram_type=qspi
+
+# Kept as a single fixed entry so old sketches with FlashSize=8M still work
+elyssa.menu.FlashSize.8M=8MB (64Mb)
+elyssa.menu.FlashSize.8M.build.flash_size=8MB
+
+# Quad flash only: OPI and QIO 120MHz removed
+elyssa.menu.FlashMode.qio=QIO 80MHz
+elyssa.menu.FlashMode.qio.build.flash_mode=dio
+elyssa.menu.FlashMode.qio.build.boot=qio
+elyssa.menu.FlashMode.qio.build.boot_freq=80m
+elyssa.menu.FlashMode.qio.build.flash_freq=80m
+elyssa.menu.FlashMode.dio=DIO 80MHz
+elyssa.menu.FlashMode.dio.build.flash_mode=dio
+elyssa.menu.FlashMode.dio.build.boot=dio
+elyssa.menu.FlashMode.dio.build.boot_freq=80m
+elyssa.menu.FlashMode.dio.build.flash_freq=80m
 
 elyssa.menu.CPUFreq.240=240MHz (WiFi)
 elyssa.menu.CPUFreq.240.build.f_cpu=240000000L
 elyssa.menu.CPUFreq.160=160MHz (WiFi)
 elyssa.menu.CPUFreq.160.build.f_cpu=160000000L
+elyssa.menu.CPUFreq.80=80MHz (WiFi)
+elyssa.menu.CPUFreq.80.build.f_cpu=80000000L
 
 elyssa.menu.UploadSpeed.921600=921600
 elyssa.menu.UploadSpeed.921600.upload.speed=921600
@@ -195,10 +168,36 @@ elyssa.menu.UploadSpeed.115200.upload.speed=115200
 
 elyssa.menu.DebugLevel.none=None
 elyssa.menu.DebugLevel.none.build.code_debug=0
+elyssa.menu.DebugLevel.error=Error
+elyssa.menu.DebugLevel.error.build.code_debug=1
+elyssa.menu.DebugLevel.warn=Warn
+elyssa.menu.DebugLevel.warn.build.code_debug=2
 elyssa.menu.DebugLevel.info=Info
 elyssa.menu.DebugLevel.info.build.code_debug=3
+elyssa.menu.DebugLevel.debug=Debug
+elyssa.menu.DebugLevel.debug.build.code_debug=4
+elyssa.menu.DebugLevel.verbose=Verbose
+elyssa.menu.DebugLevel.verbose.build.code_debug=5
+
+elyssa.menu.LoopCore.1=Core 1
+elyssa.menu.LoopCore.1.build.loop_core=-DARDUINO_RUNNING_CORE=1
+elyssa.menu.LoopCore.0=Core 0
+elyssa.menu.LoopCore.0.build.loop_core=-DARDUINO_RUNNING_CORE=0
+
+elyssa.menu.EventsCore.1=Core 1
+elyssa.menu.EventsCore.1.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=1
+elyssa.menu.EventsCore.0=Core 0
+elyssa.menu.EventsCore.0.build.event_core=-DARDUINO_EVENT_RUNNING_CORE=0
 
 elyssa.menu.EraseFlash.none=Disabled
 elyssa.menu.EraseFlash.none.upload.erase_cmd=
 elyssa.menu.EraseFlash.all=Enabled
 elyssa.menu.EraseFlash.all.upload.erase_cmd=-e
+
+# Built-in USB JTAG works only in "Hardware CDC and JTAG" mode.
+# External FTDI / bridge removed: JTAG pins (GPIO39-42) are not routed on Elyssa.
+elyssa.menu.JTAGAdapter.default=Disabled
+elyssa.menu.JTAGAdapter.default.build.copy_jtag_files=0
+elyssa.menu.JTAGAdapter.builtin=Integrated USB JTAG
+elyssa.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
+elyssa.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
