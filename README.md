@@ -1,6 +1,6 @@
 # Elyssa Dev Board
 
-ESP32-S3FN8 based development board.
+ESP32-S3FN8 based development board by Moovma.
 
 ## Features
 
@@ -15,28 +15,39 @@ ESP32-S3FN8 based development board.
 
 ---
 
-## Installation
+## Getting started (Arduino IDE)
 
-Open Arduino IDE
+### 1. Install the board package
 
-File → Preferences
+1. Install [Arduino IDE 2](https://www.arduino.cc/en/software).
+2. Open **File → Preferences** and paste this URL in **Additional boards manager URLs**:
 
-Additional Board Manager URLs:
+   ```
+   https://raw.githubusercontent.com/yassinechouk/Elyssa-dev-board/main/elyssa-arduino/package_moovma_elyssa_index.json
+   ```
 
-[link to copy in the arduino ide references
-](https://moovma.github.io/Elyssa-dev-board/elyssa-arduino/package_moovma_elyssa_index.json)
-Open:
+3. Open **Tools → Board → Boards Manager**, search **Elyssa**, and click **Install**.
+   The compiler and tools are downloaded automatically (several hundred MB, the first time only).
 
-Tools → Board → Boards Manager
+### 2. Connect the board
 
-Search:
+1. Plug the board in with a USB-C **data** cable.
+2. Select **Tools → Board → Moovma Elyssa → Elyssa**.
+3. Select **Tools → Port →** the port labelled **Elyssa**.
 
-Elyssa
+Keep the other **Tools** options at their default values.
 
-Install.
+### 3. Upload your first sketch
 
-Select:
+1. Open **File → Examples → 01.Basics → Blink**.
+2. Click **Upload**. The on-board LED starts blinking.
 
-Tools → Board → Elyssa Dev Board
+### If the upload fails
 
-Done.
+Put the board in download mode manually: **hold BOOT, press and release RESET, then release BOOT**.
+Select the port that appears and click **Upload** again. This is usually needed only once.
+
+### Serial Monitor
+
+Open **Tools → Serial Monitor**. Messages printed at the very start of `setup()` can be missed:
+press **RESET** with the monitor open to see them.
