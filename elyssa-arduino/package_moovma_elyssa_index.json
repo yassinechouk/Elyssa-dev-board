@@ -38,6 +38,36 @@
               "version": "5.2.0"
             }
           ]
+        },
+        {
+          "name": "Moovma Elyssa",
+          "architecture": "esp32",
+          "version": "1.0.1",
+          "category": "Contributed",
+          "url": "https://github.com/yassinechouk/Elyssa-dev-board/releases/download/v1.0.1/elyssa-1.0.1.zip",
+          "archiveFileName": "elyssa-1.0.1.zip",
+          "checksum": "SHA-256:c6944119533ceaea1477c04092d3bdda401ead24dbfaa2cd5f8f10b7f079b54d",
+          "size": "44393907",
+          "boards": [
+            { "name": "Elyssa" }
+          ],
+          "toolsDependencies": [
+            {
+              "packager": "esp32",
+              "name": "esp-x32",
+              "version": "2601"
+            },
+            {
+              "packager": "esp32",
+              "name": "esp32s3-libs",
+              "version": "3.3.12"
+            },
+            {
+              "packager": "esp32",
+              "name": "esptool_py",
+              "version": "5.3.1"
+            }
+          ]
         }
       ],
       "tools": [
