@@ -112,7 +112,7 @@ elyssa.menu.USBMode.hwcdc.build.usb_mode=1
 
 elyssa.menu.CDCOnBoot.cdc=Enabled
 elyssa.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
-elyssa.menu.CDCOnBoot.default=Disabled
+elyssa.menu.CDCOnBoot.default=Disabled (Serial on UART0 header pins)
 elyssa.menu.CDCOnBoot.default.build.cdc_on_boot=0
 
 elyssa.menu.MSCOnBoot.default=Disabled
@@ -209,9 +209,13 @@ elyssa.menu.EraseFlash.none.upload.erase_cmd=
 elyssa.menu.EraseFlash.all=Enabled
 elyssa.menu.EraseFlash.all.upload.erase_cmd=-e
 
-# Built-in USB JTAG works only in "Hardware CDC and JTAG" mode.
-# [MODE 2] Integrated USB JTAG is the default, so the IDE's Debug button works.
-# External FTDI / bridge removed: JTAG pins (GPIO39-42) are not routed on Elyssa.
+# JTAG Adapter: this menu has NO effect with core 3.3.x. The IDE's Debug
+# button always uses the built-in USB JTAG (debug_script.esp32s3 in
+# platform.txt). Kept only because option keys are a contract.
+# Debugging requires: USB Mode = Hardware CDC and JTAG, plus the tools
+# openocd-esp32 and xtensa-esp-elf-gdb (not yet declared in the index).
+# External FTDI / bridge removed: JTAG pins (GPIO39-42) are not routed on Elyssa
+# (to be confirmed in the schematic).
 elyssa.menu.JTAGAdapter.builtin=Integrated USB JTAG
 elyssa.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
 elyssa.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
