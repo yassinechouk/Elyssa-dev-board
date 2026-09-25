@@ -1,6 +1,11 @@
 ##############################################################
 #  Moovma Elyssa - ESP32-S3FN8 (8 MB embedded flash, no PSRAM)
 #
+#  USB: only "Hardware CDC and JTAG" (MODE 2) is active.
+#  All TinyUSB (MODE 1) lines are kept below as comments, tagged
+#  "[MODE 1 - TinyUSB, disabled]". To restore MODE 1, uncomment them
+#  and comment out the lines tagged "[MODE 2]".
+#
 #  RULE: in every menu, the FIRST option listed is the default.
 #  RULE: menu option keys (e.g. "8M", "cdc") are a contract:
 #        renaming/removing one breaks users who had it selected.
@@ -29,11 +34,16 @@ menu.PSRAM=PSRAM
 elyssa.name=Elyssa
 
 # --- USB identity for automatic board detection -------------
-# TEMPORARY PID for local tests only. Replace with the PID
-# assigned by Espressif (github.com/espressif/usb-pids).
-# MUST be identical to USB_PID in variants/elyssa/pins_arduino.h
+# [MODE 2] Hardware CDC and JTAG: VID/PID fixed in the ESP32-S3 silicon.
+# Shared by every ESP32-S3/C3/C6/H2 in this mode, so the IDE may also
+# label other Espressif boards as "Elyssa".
 elyssa.upload_port.0.vid=0x303A
-elyssa.upload_port.0.pid=0x81FF
+elyssa.upload_port.0.pid=0x1001
+# [MODE 1 - TinyUSB, disabled] TEMPORARY PID for local tests only.
+# Replace with the PID assigned by Espressif (github.com/espressif/usb-pids).
+# MUST be identical to USB_PID in variants/elyssa/pins_arduino.h
+# [MODE 1 - TinyUSB, disabled] elyssa.upload_port.1.vid=0x303A
+# [MODE 1 - TinyUSB, disabled] elyssa.upload_port.1.pid=0x81FF
 
 # --- Tools --------------------------------------------------
 elyssa.bootloader.tool=esptool_py
@@ -42,14 +52,17 @@ elyssa.upload.tool=esptool_py
 elyssa.upload.tool.default=esptool_py
 elyssa.upload.tool.network=esp_ota
 
-# --- Upload defaults (TinyUSB: reset via 1200 bps touch) ----
+# --- Upload defaults ------------------------------------------
+# [MODE 2] esptool resets the chip through DTR/RTS (no 1200 bps touch)
 elyssa.upload.maximum_size=3342336
 elyssa.upload.erase_cmd=
 elyssa.upload.maximum_data_size=327680
 elyssa.upload.flags=
 elyssa.upload.extra_flags=
-elyssa.upload.use_1200bps_touch=true
-elyssa.upload.wait_for_upload_port=true
+elyssa.upload.use_1200bps_touch=false
+elyssa.upload.wait_for_upload_port=false
+# [MODE 1 - TinyUSB, disabled] elyssa.upload.use_1200bps_touch=true
+# [MODE 1 - TinyUSB, disabled] elyssa.upload.wait_for_upload_port=true
 
 elyssa.serial.disableDTR=false
 elyssa.serial.disableRTS=false
@@ -63,8 +76,10 @@ elyssa.build.core=esp32
 elyssa.build.variant=elyssa
 elyssa.build.board=ELYSSA
 
-# --- USB defaults: TinyUSB + Serial over USB ----------------
-elyssa.build.usb_mode=0
+# --- USB defaults ------------------------------------------
+# [MODE 2] Hardware CDC and JTAG, Serial over USB-C (cdc_on_boot=1)
+elyssa.build.usb_mode=1
+# [MODE 1 - TinyUSB, disabled] elyssa.build.usb_mode=0
 elyssa.build.cdc_on_boot=1
 elyssa.build.msc_on_boot=0
 elyssa.build.dfu_on_boot=0
@@ -89,12 +104,11 @@ elyssa.build.memory_type={build.boot}_{build.psram_type}
 #  MENUS (first option = default)
 ##############################################################
 
-# USB mode: TinyUSB gives the board its "Elyssa" identity.
-# Hardware CDC kept for JTAG debugging.
-elyssa.menu.USBMode.default=USB-OTG (TinyUSB)
-elyssa.menu.USBMode.default.build.usb_mode=0
+# USB mode: [MODE 2] Hardware CDC and JTAG only.
 elyssa.menu.USBMode.hwcdc=Hardware CDC and JTAG
 elyssa.menu.USBMode.hwcdc.build.usb_mode=1
+# [MODE 1 - TinyUSB, disabled] elyssa.menu.USBMode.default=USB-OTG (TinyUSB)
+# [MODE 1 - TinyUSB, disabled] elyssa.menu.USBMode.default.build.usb_mode=0
 
 elyssa.menu.CDCOnBoot.cdc=Enabled
 elyssa.menu.CDCOnBoot.cdc.build.cdc_on_boot=1
@@ -103,20 +117,20 @@ elyssa.menu.CDCOnBoot.default.build.cdc_on_boot=0
 
 elyssa.menu.MSCOnBoot.default=Disabled
 elyssa.menu.MSCOnBoot.default.build.msc_on_boot=0
-elyssa.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
-elyssa.menu.MSCOnBoot.msc.build.msc_on_boot=1
+# [MODE 1 - TinyUSB, disabled] elyssa.menu.MSCOnBoot.msc=Enabled (Requires USB-OTG Mode)
+# [MODE 1 - TinyUSB, disabled] elyssa.menu.MSCOnBoot.msc.build.msc_on_boot=1
 
 elyssa.menu.DFUOnBoot.default=Disabled
 elyssa.menu.DFUOnBoot.default.build.dfu_on_boot=0
-elyssa.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
-elyssa.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
+# [MODE 1 - TinyUSB, disabled] elyssa.menu.DFUOnBoot.dfu=Enabled (Requires USB-OTG Mode)
+# [MODE 1 - TinyUSB, disabled] elyssa.menu.DFUOnBoot.dfu.build.dfu_on_boot=1
 
-elyssa.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
-elyssa.menu.UploadMode.cdc.upload.use_1200bps_touch=true
-elyssa.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 elyssa.menu.UploadMode.default=UART0 / Hardware CDC
 elyssa.menu.UploadMode.default.upload.use_1200bps_touch=false
 elyssa.menu.UploadMode.default.upload.wait_for_upload_port=false
+# [MODE 1 - TinyUSB, disabled] elyssa.menu.UploadMode.cdc=USB-OTG CDC (TinyUSB)
+# [MODE 1 - TinyUSB, disabled] elyssa.menu.UploadMode.cdc.upload.use_1200bps_touch=true
+# [MODE 1 - TinyUSB, disabled] elyssa.menu.UploadMode.cdc.upload.wait_for_upload_port=true
 
 # Only 8 MB schemes (the chip has exactly 8 MB)
 elyssa.menu.PartitionScheme.default_8MB=8M with spiffs (3MB APP/1.5MB SPIFFS)
@@ -196,9 +210,10 @@ elyssa.menu.EraseFlash.all=Enabled
 elyssa.menu.EraseFlash.all.upload.erase_cmd=-e
 
 # Built-in USB JTAG works only in "Hardware CDC and JTAG" mode.
+# [MODE 2] Integrated USB JTAG is the default, so the IDE's Debug button works.
 # External FTDI / bridge removed: JTAG pins (GPIO39-42) are not routed on Elyssa.
-elyssa.menu.JTAGAdapter.default=Disabled
-elyssa.menu.JTAGAdapter.default.build.copy_jtag_files=0
 elyssa.menu.JTAGAdapter.builtin=Integrated USB JTAG
 elyssa.menu.JTAGAdapter.builtin.build.openocdscript=esp32s3-builtin.cfg
 elyssa.menu.JTAGAdapter.builtin.build.copy_jtag_files=1
+elyssa.menu.JTAGAdapter.default=Disabled
+elyssa.menu.JTAGAdapter.default.build.copy_jtag_files=0
