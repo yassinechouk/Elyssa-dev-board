@@ -54,16 +54,25 @@ press **RESET** with the monitor open to see them.
 
 ---
 
-## USB settings (Tools menu)
+## Tools menu settings
 
-| Setting | Default | What it does |
+After selecting **Elyssa**, the Tools menu should look like this. These are the defaults: normally you have nothing to change.
+
+| Menu | Value | Notes |
 |---|---|---|
-| **USB Mode** | Hardware CDC and JTAG | Uses the ESP32-S3 built-in USB: serial port + JTAG debugging. Windows shows *USB JTAG/serial debug unit*, the Arduino IDE shows **Elyssa**. |
+| **Board** | Elyssa | Under *Moovma Elyssa*. |
+| **Port** | Elyssa on COMx | The COM number depends on your PC. |
+| **USB Mode** | Hardware CDC and JTAG | ESP32-S3 built-in USB: serial port + JTAG debugging. Windows shows *USB JTAG/serial debug unit*, the IDE shows **Elyssa**. |
 | **USB CDC On Boot** | Enabled | `Serial` goes to the USB-C port. If **Disabled**, `Serial` goes to the UART0 header pins (TX/RX) and nothing appears over USB-C. |
-| **Upload Mode** | UART0 / Hardware CDC | The IDE resets the board automatically before each upload (no button needed). |
-| **JTAG Adapter** | Integrated USB JTAG | Kept for compatibility, it has no effect: debugging always uses the built-in USB JTAG. |
-
-Keep these defaults unless you know why you change them.
+| **Upload Mode** | UART0 / Hardware CDC | The IDE resets the board automatically before each upload. |
+| **CPU Frequency** | 240MHz (WiFi) | 160 or 80 MHz to save power. |
+| **Flash Mode** | QIO 80MHz | Use DIO 80MHz only if you have flash problems. |
+| **Flash Size** | 8MB (64Mb) | Fixed: the chip has 8 MB. |
+| **Partition Scheme** | 8M with spiffs (3MB APP/1.5MB SPIFFS) | Choose *8M max app* if your sketch is larger than 3 MB (no OTA). |
+| **PSRAM** | Disabled | Fixed: the ESP32-S3FN8 has no PSRAM. |
+| **Core Debug Level** | None | Set **Error** (or higher) while developing to see error messages. |
+| **Erase All Flash Before Sketch Upload** | Disabled | Set **Enabled** for the first upload on a used board, to start from a clean flash. |
+| **JTAG Adapter** | Integrated USB JTAG | Kept for compatibility, no effect: debugging always uses the built-in USB JTAG. |
 
 > **Package 1.0.1:** the default USB Mode is **USB-OTG (TinyUSB)**. The board shows as *Elyssa* in Windows too,
 > and Upload Mode must stay on **USB-OTG CDC (TinyUSB)**. JTAG debugging is not available in this mode.
