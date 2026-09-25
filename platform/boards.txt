@@ -44,6 +44,7 @@ elyssa.upload.tool.network=esp_ota
 
 # --- Upload defaults (TinyUSB: reset via 1200 bps touch) ----
 elyssa.upload.maximum_size=3342336
+elyssa.upload.erase_cmd=
 elyssa.upload.maximum_data_size=327680
 elyssa.upload.flags=
 elyssa.upload.extra_flags=
