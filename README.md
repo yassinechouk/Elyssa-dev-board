@@ -51,3 +51,25 @@ Select the port that appears and click **Upload** again. This is usually needed 
 
 Open **Tools → Serial Monitor**. Messages printed at the very start of `setup()` can be missed:
 press **RESET** with the monitor open to see them.
+
+---
+
+## USB settings (Tools menu)
+
+| Setting | Default | What it does |
+|---|---|---|
+| **USB Mode** | Hardware CDC and JTAG | Uses the ESP32-S3 built-in USB: serial port + JTAG debugging. Windows shows *USB JTAG/serial debug unit*, the Arduino IDE shows **Elyssa**. |
+| **USB CDC On Boot** | Enabled | `Serial` goes to the USB-C port. If **Disabled**, `Serial` goes to the UART0 header pins (TX/RX) and nothing appears over USB-C. |
+| **Upload Mode** | UART0 / Hardware CDC | The IDE resets the board automatically before each upload (no button needed). |
+| **JTAG Adapter** | Integrated USB JTAG | Kept for compatibility, it has no effect: debugging always uses the built-in USB JTAG. |
+
+Keep these defaults unless you know why you change them.
+
+> **Package 1.0.1:** the default USB Mode is **USB-OTG (TinyUSB)**. The board shows as *Elyssa* in Windows too,
+> and Upload Mode must stay on **USB-OTG CDC (TinyUSB)**. JTAG debugging is not available in this mode.
+
+### JTAG debugging
+
+JTAG debugging (breakpoints, step by step) works only with **USB Mode = Hardware CDC and JTAG**.
+Support for the IDE **Debug** button (OpenOCD and GDB tools) will come in a next package version.
+On Windows, the JTAG interface may need a WinUSB driver.
