@@ -27,7 +27,8 @@ ESP32-S3FN8 based development board by Moovma.
    ```
 
 3. Open **Tools → Board → Boards Manager**, search **Elyssa**, and click **Install**.
-   The compiler and tools are downloaded automatically (several hundred MB, the first time only).
+
+**Linux / macOS:** install Python 3.
 
 ### 2. Connect the board
 
@@ -49,36 +50,52 @@ Select the port that appears and click **Upload** again. This is usually needed 
 
 ### Serial Monitor
 
-Open **Tools → Serial Monitor**. Messages printed at the very start of `setup()` can be missed:
-press **RESET** with the monitor open to see them.
+Open **Tools → Serial Monitor**. Press **RESET** to see the first messages.
 
 ---
 
-## Tools menu settings
+## Tools menu (defaults)
 
-After selecting **Elyssa**, the Tools menu should look like this. These are the defaults: normally you have nothing to change.
+| Menu | Value |
+|---|---|
+| Board | Elyssa |
+| Port | Elyssa on COMx |
+| USB Mode | USB-OTG (TinyUSB) |
+| USB CDC On Boot | Enabled |
+| USB Firmware MSC On Boot | Disabled |
+| USB DFU On Boot | Disabled |
+| Upload Mode | USB-OTG CDC (TinyUSB) |
+| CPU Frequency | 240MHz (WiFi) |
+| Flash Mode | QIO 80MHz |
+| Flash Size | 8MB (64Mb) |
+| Partition Scheme | 8M with spiffs (3MB APP/1.5MB SPIFFS) |
+| PSRAM | Disabled |
+| Core Debug Level | None |
+| Erase All Flash Before Sketch Upload | Disabled |
+| JTAG Adapter | Disabled |
 
-| Menu | Value | Notes |
+---
+
+## USB modes
+
+| | Mode 1 - Everyday (default) | Mode 2 - Debug (JTAG) |
 |---|---|---|
-| **Board** | Elyssa | Under *Moovma Elyssa*. |
-| **Port** | Elyssa on COMx | The COM number depends on your PC. |
-| **USB Mode** | Hardware CDC and JTAG | ESP32-S3 built-in USB: serial port + JTAG debugging. Windows shows *USB JTAG/serial debug unit*, the IDE shows **Elyssa**. |
-| **USB CDC On Boot** | Enabled | `Serial` goes to the USB-C port. If **Disabled**, `Serial` goes to the UART0 header pins (TX/RX) and nothing appears over USB-C. |
-| **Upload Mode** | UART0 / Hardware CDC | The IDE resets the board automatically before each upload. |
-| **CPU Frequency** | 240MHz (WiFi) | 160 or 80 MHz to save power. |
-| **Flash Mode** | QIO 80MHz | Use DIO 80MHz only if you have flash problems. |
-| **Flash Size** | 8MB (64Mb) | Fixed: the chip has 8 MB. |
-| **Partition Scheme** | 8M with spiffs (3MB APP/1.5MB SPIFFS) | Choose *8M max app* if your sketch is larger than 3 MB (no OTA). |
-| **PSRAM** | Disabled | Fixed: the ESP32-S3FN8 has no PSRAM. |
-| **Core Debug Level** | None | Set **Error** (or higher) while developing to see error messages. |
-| **Erase All Flash Before Sketch Upload** | Disabled | Set **Enabled** for the first upload on a used board, to start from a clean flash. |
-| **JTAG Adapter** | Integrated USB JTAG | Kept for compatibility, no effect: debugging always uses the built-in USB JTAG. |
+| USB Mode | USB-OTG (TinyUSB) | Hardware CDC and JTAG |
+| Upload Mode | USB-OTG CDC (TinyUSB) | UART0 / Hardware CDC |
+| JTAG Adapter | Disabled | Integrated USB JTAG |
 
-> **Package 1.0.1:** the default USB Mode is **USB-OTG (TinyUSB)**. The board shows as *Elyssa* in Windows too,
-> and Upload Mode must stay on **USB-OTG CDC (TinyUSB)**. JTAG debugging is not available in this mode.
+### Mode 1 → Mode 2
 
-### JTAG debugging
+1. **USB Mode → Hardware CDC and JTAG**
+2. **Upload**
+3. **Upload Mode → UART0 / Hardware CDC**
+4. **JTAG Adapter → Integrated USB JTAG**
 
-JTAG debugging (breakpoints, step by step) works only with **USB Mode = Hardware CDC and JTAG**.
-Support for the IDE **Debug** button (OpenOCD and GDB tools) will come in a next package version.
-On Windows, the JTAG interface may need a WinUSB driver.
+### Mode 2 → Mode 1
+
+1. **USB Mode → USB-OTG (TinyUSB)**
+2. **Upload**
+3. **Upload Mode → USB-OTG CDC (TinyUSB)**
+4. **JTAG Adapter → Disabled**
+
+If an upload fails: **hold BOOT, press and release RESET, release BOOT**, then **Upload** again.
