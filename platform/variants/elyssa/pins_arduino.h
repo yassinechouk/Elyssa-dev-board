@@ -24,8 +24,7 @@
 // Elyssa board functions (implemented in variant.cpp)
 //
 #ifdef __cplusplus
-void hello_elyssa();
-
+bool hello_elyssa(uint32_t wait_ms = 3000);
 bool    elyssa_imu_begin();
 bool    elyssa_imu_ready();
 uint8_t elyssa_imu_whoami();
