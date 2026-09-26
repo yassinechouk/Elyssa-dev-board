@@ -5,10 +5,16 @@
 #include "soc/soc_caps.h"
 
 //
-// USB identity (TinyUSB)
+// Naming rule: header pins follow the PCB silkscreen (IO0..IO6 = GPIO1..GPIO7).
+//              SDA/SCL keep their GPIO number (A8/A9, T8/T9 = GPIO8/GPIO9).
+//
+
+//
+// USB identity - used ONLY in "USB-OTG (TinyUSB)" mode.
+// In "Hardware CDC and JTAG" mode the identity is fixed in silicon (303A:1001).
 // USB_PID 0x81FF is TEMPORARY: replace with the PID assigned by Espressif
 // and keep it identical to upload_port.0.pid in boards.txt
-//
+// 
 #define USB_VID          0x303A
 #define USB_PID          0x81FF
 #define USB_MANUFACTURER "Moovma"
@@ -50,26 +56,34 @@ static const uint8_t IO6 = 7;   // shared with BAT_SENSE when JP3 is bridged
 //
 // Board functions
 //
-static const uint8_t BUTTON_BUILTIN = 0;   // BOOT button (SW5), LOW when pressed
-static const uint8_t BAT_SENSE      = 7;   // VBAT/2 via R64/R65, only when JP3 is bridged
-                                           // WARNING: same pin as header IO6
+static const uint8_t BOOT_BUTTON = 0;      // BOOT button, LOW when pressed
+#define BUTTON_BUILTIN BOOT_BUTTON         // previous name, kept for compatibility
+
+// Battery voltage (VBAT/2). Works ONLY if solder jumper JP3 is bridged
+// (open by default). When JP3 is bridged, do NOT use IO6 for anything else.
+static const uint8_t BAT_SENSE      = 7;
 
 //
-// UART
+// UART (header J12 pins 2/3)
 //
 static const uint8_t TX = 43;
 static const uint8_t RX = 44;
 
 //
-// IMU (LSM6DSV, dedicated I2C bus)
+// IMU (LSM6DSV, dedicated I2C bus, SA0 = GND -> address 0x6A)
 //
 static const uint8_t SDA_gyro = 17;
 static const uint8_t SCL_gyro = 18;
 static const uint8_t INT_gyro = 21;
 #define GYRO_ADDR 0x6A
 
+// Second I2C bus (Wire1) = IMU bus: Wire1.begin() uses these pins by default
+static const uint8_t SDA1 = SDA_gyro;
+static const uint8_t SCL1 = SCL_gyro;
+#define WIRE1_PIN_DEFINED 1
+
 //
-// I2C (header J12 + Qwiic J11)
+// I2C (header J12 + Qwiic J11, 4.7k pull-ups on board)
 //
 static const uint8_t SDA = 8;
 static const uint8_t SCL = 9;
@@ -94,7 +108,9 @@ static const uint8_t SD_SCK  = 12;
 static const uint8_t SD_MISO = 13;
 
 //
-// Analog (all on ADC1: usable while Wi-Fi is on)
+// Analog (A0..A6 = header IO0..IO6 = GPIO1..GPIO7, A8/A9 = SDA/SCL = GPIO8/GPIO9)
+// There is no A7.
+// All on ADC1: usable while Wi-Fi is on
 //
 static const uint8_t A0 = 1;
 static const uint8_t A1 = 2;
@@ -103,13 +119,12 @@ static const uint8_t A3 = 4;
 static const uint8_t A4 = 5;
 static const uint8_t A5 = 6;
 static const uint8_t A6 = 7;
-#define A7 SDA
-#define A8 SCL
+#define A8 SDA
+#define A9 SCL
 
 //
-// Touch
-// T0..T6 = header IO0..IO6 (GPIO1..7)
-// T7/T8  = SDA/SCL: avoid for touch when I2C is used (4.7k pull-ups)
+// Touch (T0..T6 = header IO0..IO6 = GPIO1..GPIO7, T8/T9 = SDA/SCL = GPIO8/GPIO9)
+// There is no T7. Avoid T8/T9 for touch when I2C is used (4.7k pull-ups)
 //
 static const uint8_t T0 = 1;
 static const uint8_t T1 = 2;
@@ -118,8 +133,8 @@ static const uint8_t T3 = 4;
 static const uint8_t T4 = 5;
 static const uint8_t T5 = 6;
 static const uint8_t T6 = 7;
-static const uint8_t T7 = 8;
-static const uint8_t T8 = 9;
+static const uint8_t T8 = 8;
+static const uint8_t T9 = 9;
 
 //
 // PWM (names = silkscreen; nets PWM2/PWM3 are crossed on J12)
@@ -129,11 +144,12 @@ static const uint8_t PWM2 = 47;   // header pin 16, printed "PWM2"
 static const uint8_t PWM3 = 48;   // header pin 17, printed "PWM3"
 
 //
-// LEDs
+// LEDs (active HIGH)
 //
 static const uint8_t LED_BUILTIN = 38;
+#define LED_BUILTIN LED_BUILTIN    // allow testing #ifdef LED_BUILTIN
 
-#define BUILTIN_LED LED_BUILTIN
+#define BUILTIN_LED LED_BUILTIN    // backward compatibility
 #define STATUS_LED  LED_BUILTIN
 #define USER_LED    LED_BUILTIN
 #define AMBOUBA     LED_BUILTIN
