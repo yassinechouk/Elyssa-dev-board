@@ -147,63 +147,128 @@ bool hello_elyssa(uint32_t wait_ms) {
   return true;
 }
 
-#define ELYSSA_IMU_I2C 1   // I2C controller 1 = same controller as Wire1
+//
+// IMU: LSM6DSV on its dedicated I2C bus (registers: ST datasheet DS13476)
+//
+#define ELYSSA_IMU_I2C 1             // I2C controller 1 = same controller as Wire1
 #define I2C_TIMEOUT_MS 10
+
+#define IMU_WHO_AM_I   0x0F          // fixed value 0x70
+#define IMU_CTRL1      0x10          // accel: operating mode + ODR
+#define IMU_CTRL2      0x11          // gyro:  operating mode + ODR
+#define IMU_CTRL3      0x12          // BOOT | BDU | IF_INC | SW_RESET
+#define IMU_CTRL6      0x15          // gyro full scale
+#define IMU_CTRL8      0x17          // accel full scale
+#define IMU_STATUS     0x1E          // bit0 XLDA, bit1 GDA, bit2 TDA
+#define IMU_OUT_TEMP_L 0x20          // 20-21 temp, 22-27 gyro X/Y/Z, 28-2D accel X/Y/Z
+#define IMU_OUTX_L_G   0x22
+#define IMU_OUTX_L_A   0x28
+
+#define IMU_ID         0x70
+#define GYRO_DPS_LSB   0.00875f      // +-250 dps: 8.75 mdps/LSB
+#define ACCEL_G_LSB    0.000061f     // +-2 g: 0.061 mg/LSB
+#define TEMP_LSB_PER_C 256.0f        // 0 LSB = 25 C
+
 static bool gyro_initialized = false;
 
-static uint8_t gyro_read_reg(uint8_t reg) {
-  uint8_t val = 0xFF;
+// Reads len consecutive registers in one I2C transaction (needs IF_INC = 1)
+static bool imu_read(uint8_t reg, uint8_t *buf, size_t len) {
   size_t count = 0;
-  i2cWriteReadNonStop(ELYSSA_IMU_I2C, GYRO_ADDR, &reg, 1, &val, 1, I2C_TIMEOUT_MS, &count);
-  return val;
+  return i2cWriteReadNonStop(ELYSSA_IMU_I2C, GYRO_ADDR, &reg, 1, buf, len,
+                             I2C_TIMEOUT_MS, &count) == ESP_OK && count == len;
 }
 
-static bool gyro_write_reg(uint8_t reg, uint8_t val) {
+static bool imu_write(uint8_t reg, uint8_t val) {
   uint8_t buf[2] = { reg, val };
   return i2cWrite(ELYSSA_IMU_I2C, GYRO_ADDR, buf, 2, I2C_TIMEOUT_MS) == ESP_OK;
 }
 
-static int16_t gyro_read_raw(uint8_t low_reg) {
-  uint8_t lo = gyro_read_reg(low_reg);
-  uint8_t hi = gyro_read_reg(low_reg + 1);
-  return (int16_t)((hi << 8 | lo));
+// One 16-bit output (LSB first), scaled. NAN if the IMU is not started or on I2C error.
+static float imu_read_scaled(uint8_t reg_l, float scale) {
+  uint8_t b[2];
+  if (!gyro_initialized || !imu_read(reg_l, b, 2)) return NAN;
+  return (int16_t)(b[0] | (b[1] << 8)) * scale;
 }
+
 uint8_t elyssa_imu_read_reg(uint8_t reg) {
-  return gyro_read_reg(reg);
+  uint8_t v = 0xFF;
+  imu_read(reg, &v, 1);
+  return v;
 }
+
+// Starts the IMU on its dedicated I2C bus (controller 1 = Wire1, pins SDA1/SCL1).
+// If the sketch also uses Wire1, call Wire1.begin(SDA1, SCL1, 400000) BEFORE
+// elyssa_imu_begin() (see TIPS_AND_KNOWN_ISSUES.md).
 bool elyssa_imu_begin() {
-  if (!i2cIsInit(ELYSSA_IMU_I2C)) {
-    if (i2cInit(ELYSSA_IMU_I2C, SDA_gyro, SCL_gyro, 400000) != ESP_OK) return false;
-  }
+  gyro_initialized = false;
+  if (!i2cIsInit(ELYSSA_IMU_I2C) &&
+      i2cInit(ELYSSA_IMU_I2C, SDA_gyro, SCL_gyro, 400000) != ESP_OK) return false;
   pinMode(INT_gyro, INPUT);
-  if (gyro_read_reg(0x0F) != 0x70) return false;
-  // 1. SW_RESET
-  gyro_write_reg(0x12, 0x01);
-  delay(10);
-  // 2. CTRL3: BDU=1, IF_INC=1
-  gyro_write_reg(0x12, 0x40);
-  // 3. CTRL6: gyro ±250dps (set BEFORE enabling ODR)
-  gyro_write_reg(0x15, 0x01);
-  // 4. CTRL8: accel ±2g (set BEFORE enabling ODR)
-  gyro_write_reg(0x17, 0x00);
-  // 5. CTRL1: accel 120Hz high-performance
-  gyro_write_reg(0x10, 0x06);
-  // 6. CTRL2: gyro 120Hz high-performance
-  gyro_write_reg(0x11, 0x06);
-  // 7. Wait for data ready
+
+  uint8_t v;
+  if (!imu_read(IMU_WHO_AM_I, &v, 1) || v != IMU_ID) return false;
+
+  // Software reset, then wait until the IMU clears SW_RESET
+  if (!imu_write(IMU_CTRL3, 0x01)) return false;
   uint32_t t = millis();
-  while (((gyro_read_reg(0x1E) & 0x03) != 0x03) && (millis() - t < 500));
+  do {
+    delay(1);
+    if (millis() - t > 50) return false;
+  } while (!imu_read(IMU_CTRL3, &v, 1) || (v & 0x01));
+
+  if (!imu_write(IMU_CTRL3, 0x44) ||   // BDU = 1, IF_INC = 1
+      !imu_write(IMU_CTRL6, 0x01) ||   // gyro  +-250 dps (set before ODR)
+      !imu_write(IMU_CTRL8, 0x00) ||   // accel +-2 g     (set before ODR)
+      !imu_write(IMU_CTRL1, 0x06) ||   // accel 120 Hz, high-performance
+      !imu_write(IMU_CTRL2, 0x06))     // gyro  120 Hz, high-performance
+    return false;
+
+  // Discard the first 3 samples: right after power-on they are not settled
+  // (measured on Elyssa: the first 2 are wrong, about 20 ms)
+  uint8_t skip = 3;
+  t = millis();
+  while (skip) {
+    if (millis() - t > 500) return false;
+    if (imu_read(IMU_STATUS, &v, 1) && (v & 0x03) == 0x03) {
+      uint8_t b[14];
+      if (imu_read(IMU_OUT_TEMP_L, b, sizeof(b))) skip--;   // reading clears the data-ready flags
+    } else {
+      delay(1);
+    }
+  }
   gyro_initialized = true;
   return true;
 }
-bool    elyssa_imu_ready()  { return (gyro_read_reg(0x1E) & 0x03) == 0x03; }
-uint8_t elyssa_imu_whoami() { return gyro_read_reg(0x0F); }
-float gyro_return_ax()  { return gyro_read_raw(0x22) * 0.00875f; }
-float gyro_return_ay()  { return gyro_read_raw(0x24) * 0.00875f; }
-float gyro_return_az()  { return gyro_read_raw(0x26) * 0.00875f; }
-float accel_return_ax() { return gyro_read_raw(0x28) * 0.000061f; }
-float accel_return_ay() { return gyro_read_raw(0x2A) * 0.000061f; }
-float accel_return_az() { return gyro_read_raw(0x2C) * 0.000061f; }
+
+bool elyssa_imu_ready() {
+  uint8_t s;
+  return gyro_initialized && imu_read(IMU_STATUS, &s, 1) && (s & 0x03) == 0x03;
+}
+
+uint8_t elyssa_imu_whoami() { return elyssa_imu_read_reg(IMU_WHO_AM_I); }
+
+float gyro_return_ax()  { return imu_read_scaled(IMU_OUTX_L_G,     GYRO_DPS_LSB); }
+float gyro_return_ay()  { return imu_read_scaled(IMU_OUTX_L_G + 2, GYRO_DPS_LSB); }
+float gyro_return_az()  { return imu_read_scaled(IMU_OUTX_L_G + 4, GYRO_DPS_LSB); }
+float accel_return_ax() { return imu_read_scaled(IMU_OUTX_L_A,     ACCEL_G_LSB); }
+float accel_return_ay() { return imu_read_scaled(IMU_OUTX_L_A + 2, ACCEL_G_LSB); }
+float accel_return_az() { return imu_read_scaled(IMU_OUTX_L_A + 4, ACCEL_G_LSB); }
+
 float elyssa_imu_temperature() {
-  return 25.0f + (gyro_read_raw(0x20) / 256.0f);
+  return 25.0f + imu_read_scaled(IMU_OUT_TEMP_L, 1.0f / TEMP_LSB_PER_C);
+}
+
+// Reads temperature, gyro and accel in ONE transaction: all values from the same sample.
+// Any pointer can be NULL. Returns false if the IMU is not started or on I2C error.
+bool elyssa_imu_read(float gyro[3], float accel[3], float *temp_c) {
+  uint8_t b[14];
+  if (!gyro_initialized || !imu_read(IMU_OUT_TEMP_L, b, sizeof(b))) return false;
+  int16_t raw[7];
+  for (int i = 0; i < 7; i++) raw[i] = (int16_t)(b[2 * i] | (b[2 * i + 1] << 8));
+  if (temp_c) *temp_c = 25.0f + raw[0] / TEMP_LSB_PER_C;
+  for (int i = 0; i < 3; i++) {
+    if (gyro)  gyro[i]  = raw[1 + i] * GYRO_DPS_LSB;
+    if (accel) accel[i] = raw[4 + i] * ACCEL_G_LSB;
+  }
+  return true;
 }

@@ -39,6 +39,7 @@ float accel_return_ay();
 float accel_return_az();
 
 float elyssa_imu_temperature();
+bool  elyssa_imu_read(float gyro[3], float accel[3], float *temp_c);
 #endif
 
 //
