@@ -8,7 +8,7 @@ For the people who build and publish the Moovma board package. Users do not need
 |---|---|
 | `platform/boards.txt` | the Elyssa board and its Tools menus |
 | `platform/platform.txt` | build and upload recipes (Espressif's file, with a few Moovma changes marked `Moovma`) |
-| `platform/variants/elyssa/` | `pins_arduino.h`, `variant.cpp` (RGB LED and IMU core functions), ST's LSM6DS3TR-C driver, `bootloader_qio_80m.bin`, `partitions_bin/` |
+| `platform/variants/elyssa/` | `pins_arduino.h`, `variant.cpp` (RGB LED and IMU core functions), `elyssa_wifi_power.c` (Wi-Fi power limit), ST's LSM6DS3TR-C driver, `bootloader_qio_80m.bin`, `partitions_bin/` |
 | `platform/libraries/ElyssaIMU/` | the ElyssaIMU library and its 16 examples |
 | `elyssa-arduino/package_moovma_elyssa_index.json` | the index read by the Boards Manager |
 | `CHANGELOG.md`, `README.md`, `TIPS_AND_KNOWN_ISSUES.md` | documentation |
@@ -39,7 +39,7 @@ Three steps that always gave the same result were removed from every compile:
 
 ### When the ESP32 core is updated: redo these
 
-1. **Re-apply the Moovma changes to the new `platform.txt`** (search for `Moovma`): the partition recipe, the removed `merge-bin` lines, the name. Check that the "custom bootloader" lines still exist in the new file.
+1. **Re-apply the Moovma changes to the new `platform.txt`** (search for `Moovma`): the partition recipe (both lines), the removed `merge-bin` lines, the name, and `"-Wl,--wrap=esp_wifi_start"` in `compiler.c.elf.flags` (without it the Wi-Fi power limit silently stops working). Check that the "custom bootloader" lines still exist in the new file.
 2. **Regenerate the bootloader** from the new core's `esp32s3-libs`:
    ```
    esptool --chip esp32s3 elf2image --flash-mode dio --flash-freq 80m --flash-size 8MB -o bootloader_qio_80m.bin <esp32s3-libs>/bin/bootloader_qio_80m.elf
@@ -88,6 +88,7 @@ On a real Elyssa board, with the IDE:
 5. The hashes of `<sketch>.ino.bootloader.bin` and `<sketch>.ino.partitions.bin` equal the reference values above.
 6. **USB Mode 2** (Hardware CDC and JTAG) uploads.
 7. RGB LED and IMU sketches work; the LED is off after upload.
+8. A Wi-Fi sketch prints `44` (11 dBm) for `esp_wifi_get_max_tx_power()` after `WiFi.mode(WIFI_STA)` and again after connecting, and Blink has the same size as before. (`WiFi.getTxPower()` returns a fixed 78 until the core has processed the "station started" event, so do not use it right after `WiFi.mode()`.)
 
 ## After editing the installed package by hand
 

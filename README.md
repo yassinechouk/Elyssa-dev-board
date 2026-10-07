@@ -241,8 +241,10 @@ Tested on Elyssa v5:
 - ElyssaIMU library: 90 of 93 checks (the 3 failures are the wrist-tilt issue listed in [TIPS_AND_KNOWN_ISSUES.md](TIPS_AND_KNOWN_ISSUES.md))
 - Touch on `IO0` to `IO5` and `T10`, BOOT button
 - Pin constants of `pins_arduino.h` (self-test)
+- Wi-Fi: scan, connect, ping, 21 to 23 Mbit/s, 2-minute stability, at the 11 dBm limit set by the package (see [TIPS_AND_KNOWN_ISSUES.md](TIPS_AND_KNOWN_ISSUES.md#wi-fi-transmit-power-is-limited-to-11-dbm-since-113))
+- Bluetooth LE: start, scan, advertising from -12 to +20 dBm, phone connection, Wi-Fi + Bluetooth together
 
-Not tested on a board yet: microSD with a card, battery charging and `BAT_SENSE`, external I2C devices (header and Qwiic), the `PWM2` / `PWM3` pins against the silkscreen, Wi-Fi and Bluetooth LE applications, deep-sleep current.
+Not tested on a board yet: microSD with a card, battery charging and `BAT_SENSE`, external I2C devices (header and Qwiic), the `PWM2` / `PWM3` pins against the silkscreen, deep-sleep current.
 
 ---
 
@@ -250,6 +252,7 @@ Not tested on a board yet: microSD with a card, battery charging and `BAT_SENSE`
 
 | Version | Summary |
 |---|---|
+| 1.1.3 | Wi-Fi transmit power limited to 11 dBm on Elyssa v5 (reliable connection and full speed), compile fix for Linux and macOS |
 | 1.1.2 | Faster compiles (precomputed bootloader and partition tables, no `merged.bin`), Flash Mode fixed to QIO |
 | 1.1.1 | LED off at startup, `T10` touch pin, package name **Moovma** |
 | 1.1.0 | RGB LED, IMU support (core functions + ElyssaIMU library), ST driver |

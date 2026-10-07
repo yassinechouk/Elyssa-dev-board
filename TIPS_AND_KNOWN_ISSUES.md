@@ -46,6 +46,27 @@ The red LED lights up while a sketch is being uploaded. This is normal: the red 
 ### Colours look unbalanced
 The green channel looks brighter than red and blue (same 330 ohm resistors, different LED efficiencies). Use `setLedRGB()` to balance mixed colours.
 
+## Wi-Fi
+
+### Wi-Fi transmit power is limited to 11 dBm (since 1.1.3)
+On Elyssa v5 the Wi-Fi transmitter gives a clean signal only up to about 12 to 14 dBm, depending on the router and the channel. At the ESP32 default of 20 dBm, the router cannot decode the board's frames: the connection fails (reason 2 `AUTH_EXPIRE`) or the speed falls to about 1 Mbit/s. The board package therefore sets **11 dBm** each time Wi-Fi starts (`WiFi.begin()`, `WiFi.softAP()`, ESP-NOW...). Nothing to add in your sketch.
+
+What it means:
+- Full speed (about 22 Mbit/s), a reliable connection and no data loss, with a 2.5 dB margin below the lowest limit measured.
+- Less range than a board at 20 dBm: about one wall less indoors, about half the distance in open air.
+- Reception is not affected.
+
+To choose another power anyway, call `WiFi.setTxPower()` **after** `WiFi.mode()` and before `WiFi.begin()`:
+```cpp
+WiFi.mode(WIFI_STA);
+WiFi.setTxPower(WIFI_POWER_8_5dBm);   // lower: less current, less range
+WiFi.begin(ssid, password);
+```
+Values above 12 dBm can bring back the problem on Elyssa v5 (slower speed, longer delays), depending on the router; above 14 dBm it comes back on every router tested. The setting stays until Wi-Fi is stopped (`WiFi.mode(WIFI_OFF)`); when Wi-Fi starts again, the package sets 11 dBm again.
+
+### Wi-Fi and Bluetooth at the same time
+They share one radio. Both work together, but Wi-Fi uses power save while Bluetooth is on (ping about 20 ms instead of 2 ms), and Bluetooth hears fewer devices while Wi-Fi sends a lot of data.
+
 ## Pins
 
 ### `T10` and `PWM1` are the same pin
